@@ -39,8 +39,10 @@ func (db *DBConnection) Ping() error {
 }
 
 func Open(cfg *DBConfig) (*DBConnection, error) {
-	//psqlInfo := cfg.GetConfigInfo()
+	psqlInfo := cfg.GetConfigInfo()
 
+	log.Println(cfg.URL)
+	log.Println(psqlInfo)
 	db, err := sql.Open(cfg.Driver, cfg.URL)
 	if err != nil {
 		return nil, fmt.Errorf("driver not found, %s", cfg.Driver)

@@ -26,3 +26,4 @@ task1-5447.avito2024.codenrock.com
 
 Состояние namespace, работающие pods и логи приложений можно посмотреть по адресу [https://dashboard.avito2024.codenrock.com/](https://dashboard.avito2024.codenrock.com/). Для открытия дашборда необходимо выбрать авторизацию через Kubeconfig и указать путь до выданного вам `*.kube.config` файла
 
+docker exec -it b643581b2d84 psql -U postgres -d postgres -c "SELECT * FROM tender;"
