@@ -19,6 +19,7 @@ type BidRepo interface {
 	PutBidResponse(ctx context.Context, bidID e.BidId, version e.BidDecision) error
 	PutReview(ctx context.Context, bidID e.BidId, username e.Username, feedback e.BidFeedback) error
 	UpdateBid(ctx context.Context, bid *e.Bid) (*e.Bid, error)
+	GetReviews(ctx context.Context, bidID []e.Bid, username e.Username) ([]e.BidReview, error)
 }
 
 type BidService struct {

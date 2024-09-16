@@ -531,9 +531,69 @@ func (t *TenderServer) GetBidsForTender(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (t TenderServer) GetBidReviews(w http.ResponseWriter, r *http.Request, tenderId entity2.TenderId, params entity2.GetBidReviewsParams) {
-	//TODO implement me
-	//panic("implement me")
+func (t *TenderServer) GetBidReviews(w http.ResponseWriter, r *http.Request, tenderId entity2.TenderId, params entity2.GetBidReviewsParams) {
+	if tenderId == "" || params.AuthorUsername == "" || params.RequesterUsername == "" {
+		sendErrorResponse(w, http.StatusBadRequest, entity2.ErrorResponse{Reason: "Неверный формат запроса или его параметры."})
+		return
+	}
+
+	limit := params.Limit
+	if limit == nil {
+		*limit = 5 // Значение по умолчанию
+	}
+
+	offset := params.Offset
+	if offset == nil {
+		*offset = 0
+	}
+
+	authorId, err := t.tenderService.Repo.CheckUsername(r.Context(), params.AuthorUsername)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, entity2.ErrorResponse{Reason: "Пользователь не существует или некорректен."})
+		return
+	}
+
+	requesterId, err := t.tenderService.Repo.CheckUsername(r.Context(), params.AuthorUsername)
+	if err != nil {
+		sendErrorResponse(w, http.StatusUnauthorized, entity2.ErrorResponse{Reason: "Пользователь не существует или некорректен."})
+		return
+	}
+
+	requesterOrgIds, err := t.tenderService.Repo.CheckResponsibleByUser(r.Context(), requesterId)
+	if err != nil || len(requesterOrgIds) == 0 {
+		sendErrorResponse(w, http.StatusForbidden, entity2.ErrorResponse{Reason: "Недостаточно прав для выполнения действия."})
+		return
+	}
+
+	tender, err := t.tenderService.Repo.GetTenderById(r.Context(), tenderId)
+	if err != nil || tender.Status != "Published" {
+		sendErrorResponse(w, http.StatusNotFound, entity2.ErrorResponse{Reason: "Тендер не найден."})
+		return
+	}
+
+	if tender.OrganizationId != requesterOrgIds[0] {
+		sendErrorResponse(w, http.StatusForbidden, entity2.ErrorResponse{Reason: "Недостаточно прав для выполнения действия."})
+		return
+	}
+
+	bids, err := t.bidService.Repo.GetBidByTenderIdByUser(r.Context(), tenderId, *limit, *offset, authorId)
+	if err != nil || len(bids) == 0 {
+		sendErrorResponse(w, http.StatusNotFound, entity2.ErrorResponse{Reason: "Предложение не найдено."})
+		return
+	}
+
+	reviews, err := t.bidService.Repo.GetReviews(r.Context(), bids, params.AuthorUsername)
+	if err != nil {
+		http.Error(w, "Ошибка получения списка тендеров", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(reviews); err != nil {
+		http.Error(w, "Ошибка кодирования ответа", http.StatusBadRequest)
+	}
+
 }
 
 func (t *TenderServer) CheckServer(w http.ResponseWriter, r *http.Request) {

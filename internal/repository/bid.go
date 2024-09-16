@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"log"
+	"strings"
 )
 
 type BidRepo struct {
@@ -364,4 +365,41 @@ func (r *BidRepo) PutReview(ctx context.Context, bidID e.BidId, username e.Usern
 	}
 
 	return nil
+}
+
+func (r *BidRepo) GetReviews(ctx context.Context, bidID []e.Bid, username e.Username) ([]e.BidReview, error) {
+	bids := make([]string, len(bidID))
+	args := make([]interface{}, len(bids)+1)
+
+	for i, id := range bidID {
+		bids[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id.Id
+	}
+
+	args[len(bidID)] = username
+
+	query := fmt.Sprintf(`
+		SELECT bid_id, feedback, username
+			FROM bid_feedback
+			WHERE bid_id IN (%s) AND username = $%d
+	`, strings.Join(bids, ","), len(bidID)+1)
+
+	rows, err := r.dbRepo.Query(ctx, query, args...)
+	if err != nil {
+		log.Printf("Ошибка выполнения запроса в GetReviews: %v\n", err)
+		return nil, err
+	}
+
+	var bidRevs []e.BidReview
+	for rows.Next() {
+		var bidRev e.BidReview
+		err := rows.Scan(&bidRev.Id, &bidRev.Description, &bidRev.CreatedAt)
+		if err != nil {
+			log.Printf("ошибка выполнения: %v\n", err)
+			return nil, err
+		}
+		bidRevs = append(bidRevs, bidRev)
+	}
+
+	return bidRevs, nil
 }
