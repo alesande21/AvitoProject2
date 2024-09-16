@@ -1,0 +1,7 @@
+output: newApi/server.gen.go
+package: http
+generate:
+  # other servers are available!
+  gorilla-server: true
+  models: true
+  embedded-spec: true
