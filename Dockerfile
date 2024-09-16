@@ -1,34 +1,56 @@
-FROM golang:1.23.1-alpine3.20 AS build
-COPY . /home/src
-WORKDIR /home/src
-RUN apk add make && make build
-
-FROM alpine:3.20
-EXPOSE 8080
-WORKDIR /app
-COPY --from=build /home/src/bin/app /app/avito_service
-
-ENTRYPOINT [ "/bin/sh", "-c", "/app/avito_service" ]
-
-
-
-
-
-
-
-
-#FROM gradle:4.7.0-jdk8-alpine AS build
-#COPY --chown=gradle:gradle . /home/gradle/src
-#WORKDIR /home/gradle/src
-#RUN gradle build --no-daemon
+#FROM golang:1.23.1-alpine3.20 AS build
+#COPY . /home/src
+#WORKDIR /home/src
+#RUN apk add make && make build
 #
-#FROM openjdk:8-jre-slim
-#
+#FROM alpine:3.20
 #EXPOSE 8080
+#WORKDIR /app
+#COPY --from=build /home/src/bin/app /app/avito_service
 #
-#RUN mkdir /app
-#
-#COPY --from=build /home/gradle/src/build/libs/*.jar /app/spring-boot-application.jar
-#
-#ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app/spring-boot-application.jar"]
-#
+#ENTRYPOINT [ "/bin/sh", "-c", "/app/avito_service" ]
+
+# Используем официальный образ Go в качестве базового образа для сборки
+FROM golang:1.22 AS builder
+LABEL authors="alesande"
+
+# Устанавливаем рабочую директорию внутри контейнера
+WORKDIR /app
+
+# Копируем файлы go.mod и go.sum и загружаем зависимости
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копируем исходный код приложения
+COPY . .
+
+# Сборка приложения
+RUN CGO_ENABLED=0 GOOS=linux go build -o avito_service ./cmd/app
+
+# Финальный образ
+FROM alpine:latest
+
+# Устанавливаем необходимые пакеты
+RUN apk --no-cache add ca-certificates postgresql-client
+
+# Создаем директорию для приложения
+WORKDIR /app
+
+# Копируем скомпилированный бинарник из стадии сборки
+COPY --from=builder /app/avito_service /app/avito_service
+
+# Делаем бинарный файл исполняемым
+RUN chmod +x /app/avito_service
+
+# Настройка порта, который будет использоваться
+EXPOSE 8080
+
+# Определяем точку входа
+ENTRYPOINT ["/app/avito_service"]
+
+
+
+
+
+
+
