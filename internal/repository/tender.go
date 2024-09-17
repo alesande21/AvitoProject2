@@ -337,6 +337,18 @@ func (r *TenderRepo) GetTenderByIdAndVersion(ctx context.Context, tenderID e.Ten
 	return &tender, nil
 }
 
+func (r *TenderRepo) GetTenderCount(ctx context.Context) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM tender`
+
+	err := r.dbRepo.QueryRow(ctx, query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (r *TenderRepo) Ping() error {
 	return r.dbRepo.Ping()
 }

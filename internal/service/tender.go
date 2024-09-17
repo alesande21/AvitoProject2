@@ -17,6 +17,7 @@ type TenderRepo interface {
 	UpdateTender(ctx context.Context, tender *e.Tender) (*e.Tender, error)
 	GetTenderById(ctx context.Context, tenderId e.TenderId) (*e.Tender, error)
 	GetTenderByIdAndVersion(ctx context.Context, tenderID e.TenderId, version e.TenderVersion) (*e.Tender, error)
+	GetTenderCount(ctx context.Context) (int, error)
 	Ping() error
 }
 

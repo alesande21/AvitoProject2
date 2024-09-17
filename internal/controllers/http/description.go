@@ -608,7 +608,17 @@ func (t *TenderServer) CheckServer(w http.ResponseWriter, r *http.Request) {
 func (t *TenderServer) GetTenders(w http.ResponseWriter, r *http.Request, params entity2.GetTendersParams) {
 	limit := params.Limit
 	if limit == nil {
-		*limit = 5 // Значение по умолчанию
+		if params.Offset != nil || params.ServiceType != nil {
+			*limit = 5 // Значение по умолчанию
+		} else {
+			count, err := t.tenderService.Repo.GetTenderCount(r.Context())
+			if err != nil {
+				sendErrorResponse(w, http.StatusInternalServerError, entity2.ErrorResponse{Reason: "Ошибка получения списка тендеров"})
+				return
+			}
+			*limit = entity2.PaginationLimit(count)
+			log.Println("LIMIT", *limit)
+		}
 	}
 
 	offset := params.Offset
@@ -620,6 +630,8 @@ func (t *TenderServer) GetTenders(w http.ResponseWriter, r *http.Request, params
 	var serviceTypes []entity2.TenderServiceType
 	if params.ServiceType != nil {
 		serviceTypes = *params.ServiceType
+	} else {
+		serviceTypes = []entity2.TenderServiceType{"Delivery", "Manufacture", "Construction"}
 	}
 
 	// Получаем тендеры из репозитория
