@@ -880,15 +880,20 @@ func (t *TenderServer) GetTenderStatus(w http.ResponseWriter, r *http.Request, t
 		return
 	}
 
-	tenders, err := t.tenderService.Repo.GetUserTenders(r.Context(), 1, 0, orgIds)
+	tender, err := t.tenderService.Repo.GetTenderById(r.Context(), tenderId)
 	if err != nil {
 		sendErrorResponse(w, http.StatusNotFound, entity2.ErrorResponse{Reason: "Тендер не найден"})
 		return
 	}
 
+	if tender.Status != "Published" && tender.OrganizationId != orgIds[0] {
+		sendErrorResponse(w, http.StatusForbidden, entity2.ErrorResponse{Reason: "Недостаточно прав для выполнения действия."})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(tenders[0]); err != nil {
+	if err := json.NewEncoder(w).Encode(tender.Status); err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, entity2.ErrorResponse{Reason: "Ошибка кодирования ответа"})
 	}
 }
