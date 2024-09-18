@@ -1,4 +1,4 @@
-output: newApi/server.gen.go
+output: regenerateApi/server.gen.go
 package: http
 generate:
   # other servers are available!

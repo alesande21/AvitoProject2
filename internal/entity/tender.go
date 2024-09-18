@@ -1,5 +1,9 @@
 package entity
 
+import (
+	_ "github.com/gorilla/schema"
+)
+
 const (
 	Construction TenderServiceType = "Construction"
 	Delivery     TenderServiceType = "Delivery"
@@ -86,6 +90,12 @@ type GetTendersParams struct {
 	// Если список пустой, фильтры не применяются.
 	ServiceType *[]TenderServiceType `form:"service_type,omitempty" json:"service_type,omitempty"`
 }
+
+//type GetTendersParams struct {
+//	Limit       *PaginationLimit     `schema:"limit,omitempty"`
+//	Offset      *PaginationOffset    `schema:"offset,omitempty"`
+//	ServiceType *[]TenderServiceType `schema:"service_type,omitempty"`
+//}
 
 // GetUserTendersParams defines parameters for GetUserTenders.
 type GetUserTendersParams struct {

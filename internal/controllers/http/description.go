@@ -95,12 +95,14 @@ func sendErrorResponse(w http.ResponseWriter, code int, resp entity2.ErrorRespon
 func (t *TenderServer) GetUserBids(w http.ResponseWriter, r *http.Request, params entity2.GetUserBidsParams) {
 	limit := params.Limit
 	if limit == nil {
-		*limit = 5 // Значение по умолчанию
+		var valLimit entity2.PaginationLimit = 5
+		limit = &valLimit
 	}
 
 	offset := params.Offset
 	if offset == nil {
-		*offset = 0
+		var defOffset entity2.PaginationOffset = 0
+		offset = &defOffset
 	}
 
 	var username entity2.Username
@@ -492,12 +494,14 @@ func (t *TenderServer) GetBidsForTender(w http.ResponseWriter, r *http.Request, 
 
 	limit := params.Limit
 	if limit == nil {
-		*limit = 5 // Значение по умолчанию
+		var valLimit entity2.PaginationLimit = 5
+		limit = &valLimit
 	}
 
 	offset := params.Offset
 	if offset == nil {
-		*offset = 0
+		var defOffset entity2.PaginationOffset = 0
+		offset = &defOffset
 	}
 
 	id, err := t.tenderService.Repo.CheckUsername(r.Context(), params.Username)
@@ -539,12 +543,14 @@ func (t *TenderServer) GetBidReviews(w http.ResponseWriter, r *http.Request, ten
 
 	limit := params.Limit
 	if limit == nil {
-		*limit = 5 // Значение по умолчанию
+		var valLimit entity2.PaginationLimit = 5
+		limit = &valLimit
 	}
 
 	offset := params.Offset
 	if offset == nil {
-		*offset = 0
+		var defOffset entity2.PaginationOffset = 0
+		offset = &defOffset
 	}
 
 	authorId, err := t.tenderService.Repo.CheckUsername(r.Context(), params.AuthorUsername)
@@ -608,22 +614,24 @@ func (t *TenderServer) CheckServer(w http.ResponseWriter, r *http.Request) {
 func (t *TenderServer) GetTenders(w http.ResponseWriter, r *http.Request, params entity2.GetTendersParams) {
 	limit := params.Limit
 	if limit == nil {
+		var valLimit entity2.PaginationLimit = 5
 		if params.Offset != nil || params.ServiceType != nil {
-			*limit = 5 // Значение по умолчанию
+			limit = &valLimit
 		} else {
 			count, err := t.tenderService.Repo.GetTenderCount(r.Context())
 			if err != nil {
 				sendErrorResponse(w, http.StatusInternalServerError, entity2.ErrorResponse{Reason: "Ошибка получения списка тендеров"})
 				return
 			}
-			*limit = entity2.PaginationLimit(count)
-			log.Println("LIMIT", *limit)
+			valLimit = entity2.PaginationLimit(count)
+			limit = &valLimit
 		}
 	}
 
 	offset := params.Offset
 	if offset == nil {
-		*offset = 0
+		var defOffset entity2.PaginationOffset = 0
+		offset = &defOffset
 	}
 
 	// Фильтр по типам услуг
@@ -656,12 +664,14 @@ http://localhost:8080/tenders/my?offset=0&limit=5&username=asmith
 func (t TenderServer) GetUserTenders(w http.ResponseWriter, r *http.Request, params entity2.GetUserTendersParams) {
 	limit := params.Limit
 	if limit == nil {
-		*limit = 5
+		var valLimit entity2.PaginationLimit = 5
+		limit = &valLimit
 	}
 
 	offset := params.Offset
 	if offset == nil {
-		*offset = 0
+		var defOffset entity2.PaginationOffset = 0
+		offset = &defOffset
 	}
 
 	username := params.Username

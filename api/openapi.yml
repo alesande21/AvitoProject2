@@ -1118,7 +1118,8 @@ components:
         format: int32
         minimum: 0
         maximum: 50
-        default: 5
+        example: 5
+      #  default: 5
     paginationOffset:
       in: query
       name: offset
@@ -1128,5 +1129,6 @@ components:
       schema:
         type: integer
         format: int32
-        default: 0
+        example: 0
+        #  default: 0
         minimum: 0
